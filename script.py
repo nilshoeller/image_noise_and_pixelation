@@ -1,18 +1,16 @@
 import os
-import cv2
 import numpy as np
 from PIL import Image
 
-def load_image(image_path):
-    image = cv2.imread(image_path)
-    if image is None:
-        raise FileNotFoundError("Image file not found or unable to read the file.")
-    return image
-
 def add_gaussian_noise(image, strength):
-    noise = np.random.normal(0, strength, image.shape).astype('uint8')
-    noisy_image = cv2.add(image, noise)
-    return noisy_image
+    img_array = np.array(image)
+    mean = 0
+    std_dev = strength
+    gaussian = np.random.normal(mean, std_dev, img_array.shape)
+    noisy_image = img_array + gaussian
+    noisy_img = Image.fromarray(noisy_image.astype('uint8'))
+    
+    return noisy_img
 
 def pixelate_image(image, block_size):
     width, height = image.size
@@ -44,36 +42,24 @@ def main():
     path = './original_image.jpeg'
 
     block_size = 10
-    noise_strength = 100
+    noise_strength = 40
 
-    for i in range(1,5):
+    for i in range(1,8):
 
-        # pixelate image
         noisy_image_path = path
         input_image = Image.open(noisy_image_path)
         pixelated = pixelate_image(input_image, block_size)
-        pixelated.save(f'./{base_dir}/pixelated_image_{i}_1.jpg')
+        pixelated.save(f'./{base_dir}/pixelated_image_{i}.jpg')
 
-        # add noise to image
-        try:
-            image_path = f'./{base_dir}/pixelated_image_{i}_1.jpg'
-            image = load_image(image_path)
+        image_path = f'./{base_dir}/pixelated_image_{i}.jpg'
+        input_image = Image.open(image_path)
+        noisy = add_gaussian_noise(input_image, noise_strength)
+        noisy.save(f'./{base_dir}/noisy.jpeg')
 
-            noisy_image = add_gaussian_noise(image, noise_strength)
-
-            noisy_image_output_path = f'./{base_dir}/noisy_{i}.jpeg'
-            cv2.imwrite(noisy_image_output_path, noisy_image)
-        except Exception as e:
-            print("An error occurred:", e)
-
-        # pixelate image
-        noisy_image_path = f'./{base_dir}/noisy_{i}.jpeg'
-        input_image = Image.open(noisy_image_path)
-        pixelated = pixelate_image(input_image, block_size)
-        pixelated.save(f'./{base_dir}/pixelated_image_{i}_2.jpg')
-
-        path = f'./{base_dir}/pixelated_image_{i}_2.jpg'
+        path = f'./{base_dir}/noisy.jpeg'
     
+    # delete noisy.jpeg
+    os.remove(path)
 
 if __name__ == "__main__":
     main()
