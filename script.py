@@ -35,31 +35,44 @@ def createDirectory() -> str :
 
     return find_new_path
 
+def get_first_image_height():
+    path = './original_image.jpeg'
+    input_image = Image.open(path)
+    return input_image.size[1]  # Getting the height of the image
+
 
 def main():
 
     base_dir = createDirectory()
     path = './original_image.jpeg'
 
+    image_count = 9
     block_size = 10
     noise_strength = 35
 
     pixelated_images = []
+
+    first_image_height = get_first_image_height()
+    # RGB or RGBA
+    transparent_space = Image.new('RGB', (30, first_image_height), (0, 0, 0, 0))  # Creating a transparent image
     
-    for i in range(1,9):
+    for i in range(1,image_count):
 
         noisy_image_path = path
         input_image = Image.open(noisy_image_path)
         pixelated = pixelate_image(input_image, block_size)
         pixelated_images.append(pixelated)
-        pixelated.save(f'./{base_dir}/pixelated_image_{i}.jpg')
+        pixelated.save(f'./{base_dir}/pixelated_image_{i}.jpeg')
 
-        image_path = f'./{base_dir}/pixelated_image_{i}.jpg'
+        image_path = f'./{base_dir}/pixelated_image_{i}.jpeg'
         input_image = Image.open(image_path)
         noisy = add_gaussian_noise(input_image, noise_strength)
         noisy.save(f'./{base_dir}/noisy.jpeg')
 
         path = f'./{base_dir}/noisy.jpeg'
+
+        if i != image_count - 1:
+            pixelated_images.append(transparent_space)
     
     # delete noisy.jpeg
     os.remove(path)
@@ -69,7 +82,7 @@ def main():
     # Convert numpy arrays back to PIL images
     final_pixelated = Image.fromarray(concatenated_pixelated)
     # Save the concatenated images
-    final_pixelated.save(f'./{base_dir}/all_pixelated_images.jpg')
+    final_pixelated.save(f'./{base_dir}/all_pixelated_images.jpeg')
 
 if __name__ == "__main__":
     main()
