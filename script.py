@@ -42,13 +42,16 @@ def main():
     path = './original_image.jpeg'
 
     block_size = 10
-    noise_strength = 40
+    noise_strength = 35
 
-    for i in range(1,8):
+    pixelated_images = []
+    
+    for i in range(1,9):
 
         noisy_image_path = path
         input_image = Image.open(noisy_image_path)
         pixelated = pixelate_image(input_image, block_size)
+        pixelated_images.append(pixelated)
         pixelated.save(f'./{base_dir}/pixelated_image_{i}.jpg')
 
         image_path = f'./{base_dir}/pixelated_image_{i}.jpg'
@@ -60,6 +63,13 @@ def main():
     
     # delete noisy.jpeg
     os.remove(path)
+    
+    # Concatenate images horizontally
+    concatenated_pixelated = np.concatenate([np.array(img) for img in pixelated_images], axis=1)
+    # Convert numpy arrays back to PIL images
+    final_pixelated = Image.fromarray(concatenated_pixelated)
+    # Save the concatenated images
+    final_pixelated.save(f'./{base_dir}/all_pixelated_images.jpg')
 
 if __name__ == "__main__":
     main()
