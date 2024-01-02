@@ -9,80 +9,84 @@ def add_gaussian_noise(image, strength):
     gaussian = np.random.normal(mean, std_dev, img_array.shape)
     noisy_image = img_array + gaussian
     noisy_img = Image.fromarray(noisy_image.astype('uint8'))
-    
-    return noisy_img
 
-def pixelate_image(image, block_size):
+    noisy_img.save(f'./{BASE_DIR}/noisy.png')
+    
+    return (f'./{BASE_DIR}/noisy.png')
+
+def pixelate_image(image, block_size, generated_images_list, index):
     width, height = image.size
     x_steps = width // block_size
     y_steps = height // block_size
 
     pixelated = image.resize((x_steps, y_steps), Image.NEAREST)
     pixelated = pixelated.resize(image.size, Image.NEAREST)
-    return pixelated
+
+    generated_images_list.append(pixelated)
+    pixelated.save(f'./{BASE_DIR}/pixelated_image_{index}.png')
+
+    return (f'./{BASE_DIR}/pixelated_image_{index}.png')
 
 
 def createDirectory() -> str :
-    base_dir = 'noisy_pixelised_images'
+    BASE_DIR = 'noisy_pixelised_images'
     number = 1
 
-    find_new_path = base_dir
+    find_new_path = BASE_DIR
     while os.path.exists(find_new_path):
-        find_new_path = f'{base_dir}_{number}'
+        find_new_path = f'{BASE_DIR}_{number}'
         number += 1
     
     os.mkdir(find_new_path)
 
     return find_new_path
 
-def get_first_image_height():
-    path = './original_image.jpeg'
-    input_image = Image.open(path)
-    return input_image.size[1]  # Getting the height of the image
 
+BASE_DIR = createDirectory()
 
 def main():
 
-    base_dir = createDirectory()
-    path = './original_image.jpeg'
+    path = './original_image.png'
+    input_image = Image.open(path)
 
-    image_count = 9
-    block_size = 10
-    noise_strength = 35
+
+    image_count = 8
+    block_size = 4
+    noise_strength = 30
+
+
+    first_image_height = input_image.size[1]
+    # RGB with .jpeg
+    # RGBA with .png for transparency
+    transparent_space = Image.new('RGBA', (30, first_image_height), (0, 0, 0, 0))  # Creating a transparent image
 
     pixelated_images = []
-
-    first_image_height = get_first_image_height()
-    # RGB or RGBA
-    transparent_space = Image.new('RGB', (30, first_image_height), (0, 0, 0, 0))  # Creating a transparent image
+    pixelated_images.append(input_image)
+    pixelated_images.append(transparent_space)
     
-    for i in range(1,image_count):
+    path_pixelate = path
+    for i in range(1, image_count):
 
-        noisy_image_path = path
-        input_image = Image.open(noisy_image_path)
-        pixelated = pixelate_image(input_image, block_size)
-        pixelated_images.append(pixelated)
-        pixelated.save(f'./{base_dir}/pixelated_image_{i}.jpeg')
+        input_image = Image.open(path_pixelate)
+        path_add_noise = pixelate_image(input_image, block_size, pixelated_images, i)
 
-        image_path = f'./{base_dir}/pixelated_image_{i}.jpeg'
-        input_image = Image.open(image_path)
-        noisy = add_gaussian_noise(input_image, noise_strength)
-        noisy.save(f'./{base_dir}/noisy.jpeg')
-
-        path = f'./{base_dir}/noisy.jpeg'
+        input_image = Image.open(path_add_noise)
+        path_pixelate = add_gaussian_noise(input_image, noise_strength)
 
         if i != image_count - 1:
             pixelated_images.append(transparent_space)
     
-    # delete noisy.jpeg
-    os.remove(path)
+    # delete noisy.png
+    os.remove(path_pixelate)
     
+    # convert images to RGBA
+    pixelated_images = [img.convert("RGBA") for img in pixelated_images]
     # Concatenate images horizontally
     concatenated_pixelated = np.concatenate([np.array(img) for img in pixelated_images], axis=1)
     # Convert numpy arrays back to PIL images
     final_pixelated = Image.fromarray(concatenated_pixelated)
     # Save the concatenated images
-    final_pixelated.save(f'./{base_dir}/all_pixelated_images.jpeg')
+    final_pixelated.save(f'./{BASE_DIR}/all_pixelated_images.png')
 
 if __name__ == "__main__":
     main()
