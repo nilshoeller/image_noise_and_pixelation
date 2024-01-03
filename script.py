@@ -14,7 +14,7 @@ def add_gaussian_noise(image, strength):
     
     return (f'./{BASE_DIR}/noisy.png')
 
-def pixelate_image(image, block_size, generated_images_list, index):
+def pixelate_image(image, block_size, pixelated_images, index):
     width, height = image.size
     x_steps = width // block_size
     y_steps = height // block_size
@@ -22,7 +22,7 @@ def pixelate_image(image, block_size, generated_images_list, index):
     pixelated = image.resize((x_steps, y_steps), Image.NEAREST)
     pixelated = pixelated.resize(image.size, Image.NEAREST)
 
-    generated_images_list.append(pixelated)
+    pixelated_images.append(pixelated)
     pixelated.save(f'./{BASE_DIR}/pixelated_image_{index}.png')
 
     return (f'./{BASE_DIR}/pixelated_image_{index}.png')
@@ -52,7 +52,7 @@ def main():
 
     image_count = 8
     block_size = 4
-    noise_strength = 30
+    noise_strength = 27
 
 
     first_image_height = input_image.size[1]
@@ -73,6 +73,8 @@ def main():
         input_image = Image.open(path_add_noise)
         path_pixelate = add_gaussian_noise(input_image, noise_strength)
 
+        noise_strength += ((i)*2)
+        
         if i != image_count - 1:
             pixelated_images.append(transparent_space)
     
